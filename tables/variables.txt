@@ -1,0 +1,10 @@
+Product,Source,Variable,Unit,Resolution
+Deforestation maps (1990-2000-2010),BioSceneMada (1),forest/non-forest,--,30
+,,distance to forest edge,m,30
+,,distance to previous deforestation,m,30
+Digital Elevation Model,SRTM v4.1 CSI-CGIAR (2),altitude,m,90
+,,slope,°,90
+Highways,OSM - Geofabrik (3),distance to roads,m,150
+Places,,distance to towns,m,150
+Waterways,,distance to river,m,150
+Protected areas,Rebioma (4),presence of protected area,--,30
