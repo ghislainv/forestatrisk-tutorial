@@ -97,7 +97,8 @@ if (!("forestatrisk" %in% conda_list()$name)) {
 				   "statsmodels")
 	conda_install("forestatrisk", conda_pkg, forge=FALSE)
 	# Install forestatrisk from git with pip
-	conda_install("forestatrisk", "forestatrisk", pip=TRUE, pip_ignore_installed=FALSE)
+	git_repo <- "https://github.com/ghislainv/forestatrisk/archive/master.zip"
+	conda_install("forestatrisk", git_repo, pip=TRUE, pip_ignore_installed=FALSE)
 	
 	py_discover_config(required_module="forestatrisk",
 					   use_environment="forestatrisk")
