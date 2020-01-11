@@ -70,7 +70,7 @@ diff_plot <- function(input_df, input_vector, output_file,
 	}
 	# Call to ggplot
 	p <- ggplot(NULL, aes(X, Y)) +
-	  geom_raster(data=input_df, aes(fill=Var)) +
+	    geom_raster(data=input_df, aes(fill=Var)) +
 		scale_fill_manual(values=c("red","forestgreen","darkblue","lightblue"),
 		                  na.value="transparent", guide="none") +
 		{if (!is.null(rect))

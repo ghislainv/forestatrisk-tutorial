@@ -18,16 +18,12 @@ editor_options:
 library(knitr)
 opts_chunk$set(
   fig.align="center",
-  fig.retina=2,
-  fig.width=10,
-	echo=TRUE,
-	message=FALSE,
-	warning=FALSE,
-	cache=TRUE,
-	cache.lazy=FALSE 
+  echo=TRUE,
+  message=FALSE,
+  warning=FALSE,
+  cache=TRUE,
+  cache.lazy=FALSE 
 )
-p <- Sys.getenv("PATH")
-Sys.setenv(PATH=paste0(p,";C:\\Users\\chocho\\Miniconda3\\condabin"))
 ```
 
 ## Introduction
@@ -61,7 +57,7 @@ In the preambule, change the author and date with your name and today's date.
 
 ```{r R_libraries, cache=FALSE}
 # Libraries
-pkg <- c("reticulate","glue","curl","dplyr","readr","broom",
+pkg <- c("reticulate","curl","dplyr","readr","broom",
          "ggplot2","raster","rasterVis","rgdal","leaflet","kableExtra","sf")
 load.pkg <- function(x) {
   if(!require(x, character.only=TRUE)) {
@@ -258,7 +254,7 @@ help(far.sample)
 ```{r sampling, results="hide"}
 # Training and validation data-set
 if (!file.exists("output/sample-2000-2010.txt")) {
-  samp <- far$sample(nsamp=10000L, Seed=1234L, csize=10L,
+  samp <- far$sample(nsamp=20000L, Seed=1234L, csize=10L,
                      var_dir="data/models/2000-2010",
                      input_forest_raster="fordefor.tif",
                      output_file="output/sample-2000-2010.txt",
@@ -266,7 +262,7 @@ if (!file.exists("output/sample-2000-2010.txt")) {
 }
 samp <- read.table("output/sample-2000-2010.txt", header=TRUE, sep=",")
 set.seed(1234)
-train <- sample(1:20000, size=10000, replace=FALSE)
+train <- sample(1:40000, size=20000, replace=FALSE)
 data_train <- samp[train,] %>% dplyr::filter(complete.cases(.))
 data_valid <- samp[-train,] %>% dplyr::filter(complete.cases(.))
 ```
@@ -308,7 +304,7 @@ formulas <- c(formula_1, formula_2)
 # Loop on formulas
 for (f in 1:length(formulas)) {
     # Output file
-    of <- glue("output/correlation_{f}.pdf")
+    of <- paste0("output/correlation_",f,".pdf")
     # Data
     dmat <- patsy$dmatrices(formulas[f], data=data_train, eval_env=-1L,
                                   return_type="dataframe")
@@ -325,7 +321,7 @@ In this example (see pdf files produced), we can see that a linear model should 
 
 We propose to use the **Binomial icar** model [@Vieilledent2014] to estimate the deforestation probability of a pixel given a set of environmental variables. The Binomial icar model is a linear Binomial logistic regression model including an intrinsic Conditional Autoregressive (icar) process to account for the spatial autocorrelation of the observations. Parameter inference is done in a hierarchical Bayesian framework. The `.model_binomial_icar()` function from the `forestatrisk` module includes a Metropolis-within-Gibbs algorithm written in pure C code to reduce computation time.
 
-```{r Bayes, echo=FALSE}
+```{r Bayes, out.width="40%", echo=FALSE}
 knitr::include_graphics("figures/Bayes.jpg")
 ```
 
@@ -368,7 +364,7 @@ $V_{\rho}$: variance of the spatial random effects.
   
 $n_j$: number of neighbors for spatial entity $j$.
 
-```{r icar_process, echo=FALSE}
+```{r icar_process, out.width="40%", echo=FALSE}
 knitr::include_graphics("figures/icar.png")
 ```
 
@@ -525,12 +521,11 @@ if (!file.exists("output/prob_icar.png")) {
 knitr::include_graphics("output/prob_icar.png")
 ```
 
-```{r sapm}
+```{r sapm, eval=FALSE, include=FALSE}
 sapm <- raster("data/models/2000-2010/sapm.tif")
 plot(sapm, maxpixels=100000)
 plot(mada, col="transparent", add=TRUE)
 ```
-
 
 ### Predicting future forest cover
 
@@ -563,8 +558,13 @@ We also set the color of the map and the extent of the view for leaflet.
 ```{r col_leaflet}
 # Colors and extent view for leaflet
 r <- raster("output/proj2050_icar_epsg3857_ov32.tif")
-pal <- colorFactor(c("red", "darkgreen"), c(0,1), na.color = "transparent")
-r1 <- raster(nrows=1,ncols=1,ext=extent(340000,412000,7420000,7500000),
+red_rgb <- c(225,26,28)
+forestgreen_rgb <- c(51,160,44) 
+rgbColors <- matrix(c(red_rgb,forestgreen_rgb), ncol=3, byrow=TRUE)
+Colors <- rgb(rgbColors/255)
+pal <- colorFactor(Colors, c(0,1), na.color = "transparent")
+ext_PK32 <- c(340000,412000,7420000,7500000) # PK32-Ranobe
+r1 <- raster(nrows=1,ncols=1,ext=extent(ext_PK32),
              crs=CRS("+init=epsg:32738"))
 r2 <- projectExtent(r1, crs=CRS("+init=epsg:4326"))
 ext2 <- extent(r2)
@@ -572,11 +572,15 @@ ext2 <- extent(r2)
 
 The red areas represent the deforestation on the period 2010-2050. The green areas represent the remaining forest in 2050. Most of the remaining forest in 2050 are inside the protected areas or located in remote areas, at high altitudes and far from roads and big cities (for example in the Tsaratanana mountain region and around the Masoala peninsula, north-east Madagascar).
 
-```{r fcc_leaflet}
+```{r fcc_leaflet, out.width="100%", cache=FALSE}
 # Leaflet map
 m <- leaflet() %>% addTiles() %>%
   addRasterImage(r, colors=pal, opacity=0.8, project=FALSE) %>%
-  fitBounds(ext2@xmin,ext2@ymin,ext2@xmax,ext2@ymax)
+  addLegend(colors=Colors,
+  		  labels=c("defor 2010-2050","forest 2050"),
+  		  position="bottomleft") %>%
+  #fitBounds(ext2@xmin,ext2@ymin,ext2@xmax,ext2@ymax)
+  setView(lng=46.3, lat=-19.7, zoom=7)
 m
 ```
 
@@ -712,10 +716,10 @@ if (!file.exists("output/proj2050_glm.tif")) {
 We compute the differences between glm and icar models for forest cover predictions in 2050.
 
 ```{r comp_diff}
-if (!file.exists(glue("output/diff2050_icar_glm.tif"))) {
-	far$r_diffproj(inputA=glue("output/proj2050_icar.tif"),
-				   inputB=glue("output/proj2050_glm.tif"),
-				   output_file=glue("output/diff2050_icar_glm.tif"),
+if (!file.exists("output/diff2050_icar_glm.tif")) {
+	far$r_diffproj(inputA="output/proj2050_icar.tif",
+				   inputB="output/proj2050_glm.tif",
+				   output_file="output/diff2050_icar_glm.tif",
 				   blk_rows=128L)
 }
 ```
@@ -723,16 +727,16 @@ if (!file.exists(glue("output/diff2050_icar_glm.tif"))) {
 We plot the difference with function `far.plot.differences()`.
 
 ```{r plot_diff}
-if (!file.exists(glue("output/diff2050_icar_glm.png"))) {
-    far$plot$differences(glue("output/diff2050_{comp[i]}.tif"),
+if (!file.exists("output/diff2050_icar_glm.png")) {
+    far$plot$differences("output/diff2050_{comp[i]}.tif",
                          borders="data/mada/mada38s.shp",
-                         output_file=glue("output/diff2050_icar_glm.png"))
+                         output_file="output/diff2050_icar_glm.png")
 }
 ```
 
 We can also plot with ggplot2
 
-```{r plot_diff_ggplot}
+```{r plot_diff_ggplot, cache=FALSE}
 r_diff <- resamp2df(input_file="output/diff2050_icar_glm.tif",
                     output_file="output/diff2050_icar_glm_1km.tif",
                     res=1000)
