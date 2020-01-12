@@ -106,8 +106,13 @@ if (!("forestatrisk" %in% conda_list()$name)) {
 Specify the Python version to use with reticulate and check that it is the right one.
 
 ```{r python_env}
-use_condaenv("forestatrisk")
-py_config()
+# On RStudio server (uncomment the following two lines)
+Sys.unsetenv("DISPLAY")
+use_python("/usr/bin/python3")
+
+# On RStudio desktop (uncomment the following lines)
+#use_condaenv("forestatrisk")
+#py_config()
 ```
 
 Import the Python modules into R.
@@ -254,7 +259,7 @@ help(far.sample)
 ```{r sampling, results="hide"}
 # Training and validation data-set
 if (!file.exists("output/sample-2000-2010.txt")) {
-  samp <- far$sample(nsamp=20000L, Seed=1234L, csize=10L,
+  samp <- far$sample(nsamp=10000L, Seed=1234L, csize=10L,
                      var_dir="data/models/2000-2010",
                      input_forest_raster="fordefor.tif",
                      output_file="output/sample-2000-2010.txt",
@@ -262,7 +267,7 @@ if (!file.exists("output/sample-2000-2010.txt")) {
 }
 samp <- read.table("output/sample-2000-2010.txt", header=TRUE, sep=",")
 set.seed(1234)
-train <- sample(1:40000, size=20000, replace=FALSE)
+train <- sample(1:20000, size=10000, replace=FALSE)
 data_train <- samp[train,] %>% dplyr::filter(complete.cases(.))
 data_valid <- samp[-train,] %>% dplyr::filter(complete.cases(.))
 ```
@@ -463,6 +468,11 @@ plot(mcmc[,c(1:3,9,10)])
 # Get the spatial random effects
 rho <- rep(-9999,ncell)  # -9999 will be considered as nodata
 rho[cell_in+1] <- mod_icar$rho
+
+# Write to GeoTIFF
+far$wrast_rho(rho, input_raster="data/models/2000-2010/fordefor.tif",
+							csize=10,
+							output_file="output/rho_orig.tif")
 
 # Plot random effects
 fig <- far$plot$rho("output/rho_orig.tif",output_file="output/rho_orig.png")
