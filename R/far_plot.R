@@ -16,6 +16,7 @@ require(grid) # for grid::unit()
 require(sf)
 require(dplyr)
 require(ggplot2)
+require(rgdal)
 
 # Theme
 ## Setting basic theme options for plot with ggplot2
@@ -97,6 +98,9 @@ resamp2df <- function(input_file,output_file,res=1000) {
   Output <- output_file
   system(paste0("gdalwarp -overwrite -tap -tr ",Res," ",Res," -r near \\
                 -ot Byte -co 'COMPRESS=LZW' -co 'PREDICTOR=2' ",Input," ",Output))
+  #gdalUtils::gdalwarp(Input, Output, overwrite=TRUE, tap=TRUE, tr=c(Res,Res),
+  #		 r="near", ot="Byte", co=list("COMPRESS=LZW","PREDICTOR=2"),
+  #		 verbose=TRUE)
   r <- raster(output_file)
   rdf <- data.frame(rasterToPoints(r))
   colnames(rdf) <- c("X","Y","Var")

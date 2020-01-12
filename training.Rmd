@@ -101,16 +101,28 @@ if (!("forestatrisk" %in% conda_list()$name)) {
 }
 ```
 
+Note: for a manual installation of the virtual environment, execute the following command lines in a terminal.
+
+```{bash conda_manual, eval=FALSE}
+conda create --name forestatrisk python gdal numpy pandas \
+	patsy pip matplotlib scipy scikit-learn statsmodels --yes
+#conda env list
+conda activate forestatrisk
+pip install https://github.com/ghislainv/forestatrisk/archive/master.zip
+#conda list
+```
+
 ### Python in R
 
 Specify the Python version to use with reticulate and check that it is the right one.
 
 ```{r python_env, cache=FALSE}
 # On RStudio server (uncomment the following two lines)
-Sys.unsetenv("DISPLAY")
-use_python("/usr/bin/python3")
+#Sys.unsetenv("DISPLAY")
+#use_python("/usr/bin/python3")
+
 # On RStudio desktop (uncomment the following lines)
-#use_condaenv("forestatrisk")
+use_condaenv("forestatrisk")
 
 # Check python configuration
 py_config()
@@ -745,9 +757,11 @@ if (!file.exists("output/diff2050_icar_glm.png")) {
 }
 ```
 
-We can also plot with ggplot2
+We can also plot with ggplot2.
 
 ```{r plot_diff_ggplot, cache=FALSE}
+# If using conda env, uncomment following line
+Sys.setenv(PROJ_LIB="/home/ghislain/miniconda3/envs/forestatrisk/share/proj")
 r_diff <- resamp2df(input_file="output/diff2050_icar_glm.tif",
                     output_file="output/diff2050_icar_glm_1km.tif",
                     res=1000)
