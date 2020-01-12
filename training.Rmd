@@ -82,7 +82,7 @@ To install Miniconda3 with Python3, follow the instructions here: https://conda.
 
 Using functions from the `reticulate` R package, install the conda environment with a selection of Python packages.
 
-```{r condaenv}
+```{r condaenv, cache=FALSE}
 library(reticulate)
 if (!("forestatrisk" %in% conda_list()$name)) {
 	# Create conda virtual environment
@@ -105,14 +105,15 @@ if (!("forestatrisk" %in% conda_list()$name)) {
 
 Specify the Python version to use with reticulate and check that it is the right one.
 
-```{r python_env}
+```{r python_env, cache=FALSE}
 # On RStudio server (uncomment the following two lines)
 Sys.unsetenv("DISPLAY")
 use_python("/usr/bin/python3")
-
 # On RStudio desktop (uncomment the following lines)
 #use_condaenv("forestatrisk")
-#py_config()
+
+# Check python configuration
+py_config()
 ```
 
 Import the Python modules into R.
@@ -738,7 +739,7 @@ We plot the difference with function `far.plot.differences()`.
 
 ```{r plot_diff}
 if (!file.exists("output/diff2050_icar_glm.png")) {
-    far$plot$differences("output/diff2050_{comp[i]}.tif",
+    far$plot$differences("output/diff2050_icar_glm.tif",
                          borders="data/mada/mada38s.shp",
                          output_file="output/diff2050_icar_glm.png")
 }
@@ -760,6 +761,5 @@ p <- diff_plot(input_df=r_diff,
                rect=rect_df)
 p
 ```
-
 
 ## References
